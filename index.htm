@@ -1,0 +1,380 @@
+import React, {
+  useState,
+  useEffect,
+  useRef,
+} from "react";
+
+export default function DanishAI() {
+  const [started, setStarted] =
+    useState(false);
+
+  const [messages, setMessages] =
+    useState([
+      {
+        sender: "ai",
+        text:
+          "Halo 👋 Saya Danish AI 🌸\nTanyakan apa saja kepadaku.",
+      },
+    ]);
+
+  const [input, setInput] =
+    useState("");
+
+  const [videoPrompt, setVideoPrompt] =
+    useState("");
+
+  const [darkMode, setDarkMode] =
+    useState(true);
+
+  const [isListening, setIsListening] =
+    useState(false);
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const recognitionRef = useRef(null);
+
+  // ======================
+  // LOAD CHAT
+  // ======================
+  useEffect(() => {
+    const saved =
+      localStorage.getItem(
+        "danish_ai"
+      );
+
+    if (saved) {
+      setMessages(
+        JSON.parse(saved)
+      );
+    }
+  }, []);
+
+  // ======================
+  // SAVE CHAT
+  // ======================
+  useEffect(() => {
+    localStorage.setItem(
+      "danish_ai",
+      JSON.stringify(messages)
+    );
+  }, [messages]);
+
+  // ======================
+  // VOICE INPUT
+  // ======================
+  const startVoice = () => {
+    const SpeechRecognition =
+      window.SpeechRecognition ||
+      window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert(
+        "Browser tidak mendukung voice"
+      );
+      return;
+    }
+
+    const recognition =
+      new SpeechRecognition();
+
+    recognition.lang = "id-ID";
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.onresult = (
+      event
+    ) => {
+      const transcript =
+        event.results[0][0]
+          .transcript;
+
+      setInput(transcript);
+    };
+
+    recognition.start();
+  };
+
+  // ======================
+  // AI SPEAK
+  // ======================
+  const speakAI = (text) => {
+    const speech =
+      new SpeechSynthesisUtterance(
+        text
+      );
+
+    speech.lang = "id-ID";
+
+    window.speechSynthesis.speak(
+      speech
+    );
+  };
+
+  // ======================
+  // SEND MESSAGE
+  // ======================
+  const sendMessage = () => {
+    if (!input.trim()) return;
+
+    const userMessage = {
+      sender: "user",
+      text: input,
+    };
+
+    setMessages((prev) => [
+      ...prev,
+      userMessage,
+    ]);
+
+    const userText =
+      input.toLowerCase();
+
+    setInput("");
+
+    setLoading(true);
+
+    let aiReply =
+      "Aku mengerti ✨";
+
+    if (
+      userText.includes("halo")
+    ) {
+      aiReply =
+        "Halo juga 👋";
+    } else if (
+      userText.includes(
+        "siapa kamu"
+      )
+    ) {
+      aiReply =
+        "Saya Danish AI 🌸";
+    } else if (
+      userText.includes(
+        "anime"
+      )
+    ) {
+      aiReply =
+        "Anime sangat keren ✨";
+    }
+
+    setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "ai",
+          text: aiReply,
+        },
+      ]);
+
+      speakAI(aiReply);
+
+      setLoading(false);
+    }, 1000);
+  };
+
+  // ======================
+  // GENERATE IMAGE
+  // ======================
+  const generateImage = () => {
+    if (!input.trim()) return;
+
+    setLoading(true);
+
+    const image =
+      "https://picsum.photos/600/400?random=" +
+      Math.floor(
+        Math.random() * 1000
+      );
+
+    setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "ai",
+          text:
+            "🎨 Gambar berhasil dibuat",
+        },
+        {
+          sender: "ai",
+          image: image,
+        },
+      ]);
+
+      speakAI(
+        "Gambar berhasil dibuat"
+      );
+
+      setLoading(false);
+    }, 2000);
+  };
+
+  // ======================
+  // GENERATE VIDEO
+  // ======================
+  const generateVideo = () => {
+    if (!videoPrompt.trim())
+      return;
+
+    setLoading(true);
+
+    setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "ai",
+          text:
+            "🎬 Video sedang dibuat:\n" +
+            videoPrompt,
+        },
+      ]);
+
+      speakAI(
+        "Video sedang dibuat"
+      );
+
+      setLoading(false);
+    }, 2000);
+  };
+
+  // ======================
+  // CLEAR CHAT
+  // ======================
+  const clearChat = () => {
+    localStorage.removeItem(
+      "danish_ai"
+    );
+
+    setMessages([
+      {
+        sender: "ai",
+        text:
+          "🗑️ Chat dihapus",
+      },
+    ]);
+  };
+
+  // ======================
+  // OPENING SCREEN
+  // ======================
+  if (!started) {
+    return (
+      <div className="relative min-h-screen bg-black overflow-hidden flex items-center justify-center">
+        
+        {/* VIDEO BACKGROUND */}
+        <video
+          autoPlay
+          muted
+          loop
+          className="absolute inset-0 w-full h-full object-cover opacity-40"
+        >
+          {/* GANTI VIDEO */}
+          <source
+            src="/36608.mp4"
+            type="video/mp4"
+          />
+        </video>
+
+        {/* OVERLAY */}
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+
+        {/* CONTENT */}
+        <div className="relative z-10 text-center px-5">
+          <h1 className="text-6xl md:text-8xl font-black bg-gradient-to-r from-pink-400 to-purple-400 text-transparent bg-clip-text">
+            DANISH AI
+          </h1>
+
+          <p className="text-gray-300 mt-5 text-lg">
+            Anime Futuristic AI Assistant
+          </p>
+
+          {/* SIGN IN */}
+          <button
+            onClick={() =>
+              setStarted(true)
+            }
+            className="mt-10 bg-gradient-to-r from-pink-500 to-purple-500 px-10 py-5 rounded-3xl text-xl font-bold hover:scale-105 transition shadow-2xl"
+          >
+            SIGN IN ✨
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ======================
+  // MAIN APP
+  // ======================
+  return (
+    <div
+      className={`min-h-screen ${
+        darkMode
+          ? "bg-black text-white"
+          : "bg-pink-100 text-black"
+      }`}
+    >
+      {/* BG GLOW */}
+      <div className="fixed inset-0 overflow-hidden">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-pink-500 rounded-full blur-[150px] opacity-20"></div>
+
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-500 rounded-full blur-[150px] opacity-20"></div>
+      </div>
+
+      {/* HEADER */}
+      <header className="relative z-10 flex justify-between items-center p-5 border-b border-pink-500/20 backdrop-blur-xl">
+        <div>
+          <h1 className="text-3xl font-black text-pink-400">
+            Danish AI 🌸
+          </h1>
+
+          <p className="text-gray-400 text-sm">
+            Anime Assistant
+          </p>
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            onClick={() =>
+              setDarkMode(
+                !darkMode
+              )
+            }
+            className="bg-purple-600 px-4 py-2 rounded-2xl"
+          >
+            {darkMode
+              ? "☀️"
+              : "🌙"}
+          </button>
+
+          <button
+            onClick={clearChat}
+            className="bg-red-500 px-4 py-2 rounded-2xl"
+          >
+            🗑️
+          </button>
+        </div>
+      </header>
+
+      {/* CHAT */}
+      <section className="relative z-10 max-w-5xl mx-auto px-5 py-10">
+        <div className="bg-white/5 backdrop-blur-2xl border border-pink-500/20 rounded-[35px] p-5 h-[500px] overflow-y-auto">
+          {messages.map(
+            (msg, index) => (
+              <div
+                key={index}
+                className={`flex mb-5 ${
+                  msg.sender ===
+                  "user"
+                    ? "justify-end"
+                    : "justify-start"
+                }`}
+              >
+                <div
+                  className={`max-w-[80%] rounded-3xl p-4 ${
+                  
